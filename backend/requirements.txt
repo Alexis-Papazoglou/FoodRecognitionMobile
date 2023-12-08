@@ -1,4 +1,4 @@
 Flask==2.0.1
-tensorflow==2.6.3  # A version compatible with Linux
+tensorflow==2.15.0  # Use a version compatible with your application
 numpy==1.19.5
 Pillow==8.4.0
