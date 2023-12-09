@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
 import os
 os.environ['CUDA_VISIBLE_DEVICES'] = ''
-from tensorflow.keras.applications.inception_v3 import InceptionV3
+from tensorflow.keras.applications import MobileNetV2
 from tensorflow.keras.preprocessing import image
 from tensorflow.keras.applications.inception_v3 import preprocess_input, decode_predictions
 import numpy as np
@@ -11,7 +11,7 @@ from flask_cors import CORS
 
 app = Flask(__name__)
 CORS(app)
-model = InceptionV3(weights='imagenet')
+model = MobileNetV2(weights='imagenet')
 
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -20,7 +20,7 @@ def predict():
         image_file = request.files['image']
 
         # Read the image from FileStorage object
-        img = image.load_img(BytesIO(image_file.read()), target_size=(299, 299))
+        img = image.load_img(BytesIO(image_file.read()), target_size=(224, 224))
 
         # Rest of the code remains unchanged
         img_array = image.img_to_array(img)
@@ -46,4 +46,4 @@ def hello_world():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=5000 , threaded = False)
