@@ -1,4 +1,6 @@
 from flask import Flask, request, jsonify
+import os
+os.environ['CUDA_VISIBLE_DEVICES'] = ''
 from tensorflow.keras.applications.inception_v3 import InceptionV3
 from tensorflow.keras.preprocessing import image
 from tensorflow.keras.applications.inception_v3 import preprocess_input, decode_predictions
