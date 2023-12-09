@@ -1,47 +1,96 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, Text, Button, Image } from 'react-native';
-import { GLView } from 'expo-gl';
+import * as ImagePicker from 'expo-image-picker';
 
-const App = () => {
-  const [image, setImage] = useState(null);
-  const [prediction, setPrediction] = useState(null);
+export default function App() {
+  const [selectedImage, setSelectedImage] = useState(null);
 
-  const onContextCreate = async (gl) => {
-    const formData = new FormData();
-    formData.append('image', {
-      uri: image,
-      type: 'image/jpeg',
-      name: 'photo.jpg',
-    });
-
+  const handleImageUpload = async () => {
     try {
-      let response = await fetch('https:///predict', {
-        method: 'POST',
-        body: formData,
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        console.error('Permission to access media library was denied');
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 1,
       });
 
-      let result = await response.json();
-      setPrediction(result);
+      if (!result.cancelled) {
+        console.log('Image selected successfully');
+        const imageUri = result.uri || (result.assets && result.assets.length > 0 && result.assets[0].uri);
+
+        setSelectedImage(imageUri);
+      } else {
+        console.error('Image selection cancelled');
+      }
     } catch (error) {
-      console.error('Error sending image to model:', error);
+      console.error('Error selecting image:', error);
+    }
+  };
+
+  const handleUpload = async () => {
+    try {
+      if (!selectedImage) {
+        console.error('No image selected');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('image', {
+        uri: selectedImage,
+        name: 'image.jpg',
+        type: 'image/jpg',
+      });
+
+      const response = await fetch('http://10.0.2.2:5000/predict', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (response.ok) {
+        console.log('Image uploaded successfully');
+        const result = await response.json();
+        console.log(result);
+      } else {
+        console.error('Image upload failed');
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error);
     }
   };
 
 
-  const pickImage = async () => {
-    // Implement image picking logic using Expo ImagePicker
+  const handleHello = async () => {
+    try {
+      const response = await fetch('http://10.0.2.2:5000/hello');
+      if (response.ok) {
+        const result = await response.json();
+        console.log(result);
+      } else {
+        console.error('Failed to fetch /hello');
+      }
+    } catch (error) {
+      console.error('Error fetching /hello:', error);
+    }
   };
 
   return (
-    <View>
-      <Button title="Pick an image from camera roll" onPress={pickImage} />
-      <GLView style={{ width: 200, height: 200 }} onContextCreate={onContextCreate} />
-      {prediction && <Text>{JSON.stringify(prediction)}</Text>}
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <Text>Image Uploader</Text>
+      <Button title="Select Image" onPress={handleImageUpload} />
+      <Button title="Hello" onPress={handleHello} />
+
+      {selectedImage && (
+        <>
+          <Image source={{ uri: selectedImage }} style={{ width: 200, height: 200 }} />
+          <Button title="Upload Image" onPress={handleUpload} />
+        </>
+      )}
     </View>
   );
-};
-
-export default App;
+}

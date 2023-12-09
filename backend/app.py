@@ -4,8 +4,11 @@ from tensorflow.keras.preprocessing import image
 from tensorflow.keras.applications.inception_v3 import preprocess_input, decode_predictions
 import numpy as np
 from io import BytesIO
+from flask import Flask, request, jsonify
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 model = InceptionV3(weights='imagenet')
 
 @app.route('/predict', methods=['POST'])
@@ -35,7 +38,9 @@ def predict():
     
 @app.route('/hello', methods=['GET'])
 def hello_world():
-    return 'Hello, World!'
+    app.logger.info('Received a request to /hello')
+    return {'answer' : 'hello'}
+
 
 
 if __name__ == '__main__':
